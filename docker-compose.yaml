@@ -10,5 +10,41 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecom-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecom-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GOOSE_DBSTRING: "host=postgres user=postgres password=postgres dbname=ecom sslmode=disable"
+      PORT: "8080"
+      LOG_LEVEL: "info"
+    ports:
+      - "8080:8080"
+    networks:
+      - ecom-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
 volumes:
   postgres-data:
+
+networks:
+  ecom-network:
+    driver: bridge
