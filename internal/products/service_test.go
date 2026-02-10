@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	repo "github.com/sawkyawwalarhtwe/ecom-api/internal/adapters/postgresql/sqlc"
@@ -54,9 +55,13 @@ func (m *MockQuerier) UpdateProductQuantity(ctx context.Context, arg repo.Update
 }
 
 func TestListProducts_Success(t *testing.T) {
+	tt, err := time.Parse(time.RFC3339, "2026-02-11T10:00:00Z")
+	if err != nil {
+		t.Fatalf("failed to parse timestamp: %v", err)
+	}
 	ts := pgtype.Timestamptz{}
-	if err := ts.Scan("2026-02-11T10:00:00Z"); err != nil {
-		t.Fatalf("failed to scan timestamp: %v", err)
+	if err := ts.Scan(tt); err != nil {
+		t.Fatalf("failed to scan timestamptz: %v", err)
 	}
 
 	expectedProducts := []repo.Product{
