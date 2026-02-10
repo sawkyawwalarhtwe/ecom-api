@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-          cache: true
+          cache: false
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -47,10 +47,15 @@ jobs:
         run: go vet ./...
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=5m
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          golangci-lint --version
+
+      - name: Run golangci-lint
+        run: |
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          golangci-lint run ./... --timeout=5m
 
   build:
     name: Build
@@ -68,7 +73,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-          cache: true
+          cache: false
 
       - name: Build binary
         run: go build -o ecom-api ./cmd
