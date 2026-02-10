@@ -27,7 +27,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close(ctx)
+	defer func() {
+		if err := conn.Close(ctx); err != nil {
+			slog.Error("failed to close database connection", "error", err)
+		}
+	}()
 
 	api := application{
 		config: cfg,

@@ -29,7 +29,9 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("all good"))
+		if _, err := w.Write([]byte("all good")); err != nil {
+			log.Printf("failed to write health response: %v", err)
+		}
 	})
 
 	// OpenAPI documentation endpoint
@@ -119,7 +121,11 @@ func serveOpenAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(openAPISpec)
+	if err := json.NewEncoder(w).Encode(openAPISpec); err != nil {
+		log.Printf("failed to encode openapi spec: %v", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // serveDocsHTML serves a simple Swagger UI-like HTML page
@@ -207,7 +213,9 @@ func serveDocsHTML(w http.ResponseWriter, r *http.Request) {
 </html>`
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(html))
+	if _, err := w.Write([]byte(html)); err != nil {
+		log.Printf("failed to write docs HTML: %v", err)
+	}
 }
 
 func (app *application) run(h http.Handler) error {

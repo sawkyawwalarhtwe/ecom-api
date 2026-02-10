@@ -39,7 +39,13 @@ func (s *svc) PlaceOrder(ctx context.Context, tempOrder createOrderParams) (repo
 	if err != nil {
 		return repo.Order{}, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil && err != pgx.ErrTxClosed {
+			// rollback may fail if transaction already committed; log and ignore
+			// fmt is already imported in this file
+			fmt.Printf("failed to rollback transaction: %v\n", err)
+		}
+	}()
 
 	qtx := s.repo.WithTx(tx)
 

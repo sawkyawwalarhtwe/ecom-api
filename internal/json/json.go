@@ -8,7 +8,10 @@ import (
 func Write(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		// best-effort: write an error to the response if encoding fails
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 func Read(r *http.Request, data any) error {

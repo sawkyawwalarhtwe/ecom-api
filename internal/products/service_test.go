@@ -55,7 +55,9 @@ func (m *MockQuerier) UpdateProductQuantity(ctx context.Context, arg repo.Update
 
 func TestListProducts_Success(t *testing.T) {
 	ts := pgtype.Timestamptz{}
-	ts.Scan("2026-02-11T10:00:00Z")
+	if err := ts.Scan("2026-02-11T10:00:00Z"); err != nil {
+		t.Fatalf("failed to scan timestamp: %v", err)
+	}
 
 	expectedProducts := []repo.Product{
 		{
